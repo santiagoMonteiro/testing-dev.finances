@@ -1,16 +1,22 @@
-const { By, Key, Builder, Alert } = require('selenium-webdriver')
+const { By, Key, Builder, logging, until } = require('selenium-webdriver')
 require('chromedriver')
 
-// const driver = new Builder().forBrowser('chrome').build()
-
 describe('Criação de transações - Test Suite', () => {
-  let driver, createTransactionButton, modalOverlay, cancelTransactionCreationButton, submitButton
+  let driver,
+    createTransactionButton,
+    modalOverlay,
+    cancelTransactionCreationButton,
+    submitButton,
+    descriptionInput,
+    amountInput,
+    dateInput
 
   beforeEach(async () => {
-    driver = new Builder().forBrowser('chrome').build()
+    driver = new Builder()
+      .forBrowser('chrome')
+      .build()
 
     await driver.get('https://santiagomonteiro.github.io/dev.finances/')
-    
 
     createTransactionButton = await driver.findElement(
       By.id('createTransactionButton')
@@ -23,7 +29,14 @@ describe('Criação de transações - Test Suite', () => {
     )
 
     submitButton = await driver.findElement(By.id('submit-button'))
-  })
+
+    descriptionInput = await driver.findElement(By.id('description'))
+
+    amountInput = await driver.findElement(By.id('amount'))
+
+    dateInput = await driver.findElement(By.id('date'))
+
+  }, 10000)
 
   afterEach(async () => {
     await driver.quit()
@@ -39,34 +52,25 @@ describe('Criação de transações - Test Suite', () => {
     modalOverlayClasses = await modalOverlay.getAttribute('class')
 
     expect(modalOverlayClasses.includes('active')).toBe(true)
-  })
 
+    cancelTransactionCreationButton.click()
+
+    modalOverlayClasses = await modalOverlay.getAttribute('class')
+
+    expect(modalOverlayClasses).toBe('modal-overlay')
+  })
 
   test('Usuário tenta criar transação passando os campos vazios', async () => {
-    // await driver.executeScript(
-    //   'window.originalAlert = window.alert; window.alert = function(message) { window.alertMessage = message; };'
-    // );
-
     createTransactionButton.click()
+
     submitButton.click()
 
-    // const message = driver.switchTo().alert().getText();
+    await driver.wait(until.alertIsPresent())
 
-    const alert = await driver.switchTo().alert();
+    const alert = await driver.switchTo().alert()
 
-    // Obtém o texto do alert
-    const texto = await alert.getText();
+    const alertText = await alert.getText()
 
-    // const alertMessage = await driver.executeScript("return window.alertMessage;");
-    console.log(message)
+    expect(alertText).toBe('Por favor, preencha todos os campos')
   })
 })
-
-
-// const windowAlert = window.alert;
-
-// window.alert = function(message) {
-//   console.log(`window.alert called with message: ${message}`);
-//   return windowAlert(message);
-// };
-// alert('FOO');
