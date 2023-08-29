@@ -187,6 +187,10 @@ describe('dev.finance$ - Test Suite', () => {
     const transaction = await driver.findElement(By.tagName('tbody')).getText()
 
     expect(transaction).toBe("Conta de Luz -R$ 256,00 20/08/2001")
+
+    const modalOverlayClasses = await modalOverlay.getAttribute('class')
+
+    expect(modalOverlayClasses).toBe('modal-overlay')
   })
 
   test('CT10 - Usuário tenta criar transação passando todos os campos preenchidos, mas o campo de valor preenchido com 0', async () => {
@@ -214,13 +218,11 @@ describe('dev.finance$ - Test Suite', () => {
   test('CT11-01 - Usuário tenta criar transação passando todos os campos preenchidos, mas o campo de data preenchido com uma data fictícia: underflow ou overflow de dia/mês', async () => {
     createTransactionButton.click()
 
+    await dateInput.sendKeys('00/00/0000')
+
     await descriptionInput.sendKeys('Conta de Luz')
 
     await amountInput.sendKeys('256')
-
-    await dateInput.sendKeys('00/00/0000')
-
-    cancelTransactionCreationButton.click() // para remover o foco do input
 
     const dateInputText = await dateInput.getAttribute('value')
 
@@ -230,13 +232,11 @@ describe('dev.finance$ - Test Suite', () => {
   test('CT11-02 - Usuário tenta criar transação passando todos os campos preenchidos, mas o campo de data preenchido com uma data fictícia: underflow ou overflow de dia/mês', async () => {
     createTransactionButton.click()
 
+    await dateInput.sendKeys('32/13/2023')
+
     await descriptionInput.sendKeys('Conta de Luz')
 
     await amountInput.sendKeys('256')
-
-    await dateInput.sendKeys('32/13/2023')
-
-    cancelTransactionCreationButton.click() // para remover o foco do input
 
     const dateInputText = await dateInput.getAttribute('value')
 
@@ -272,8 +272,6 @@ describe('dev.finance$ - Test Suite', () => {
 
     submitButton.click()
 
-
-
     createTransactionButton.click()
 
     await descriptionInput.sendKeys('Freela de Aplicativo')
@@ -299,8 +297,6 @@ describe('dev.finance$ - Test Suite', () => {
     await dateInput.sendKeys('20/08/2023')
 
     submitButton.click()
-
-
 
     createTransactionButton.click()
 
@@ -328,8 +324,6 @@ describe('dev.finance$ - Test Suite', () => {
 
     submitButton.click()
 
-
-
     createTransactionButton.click()
 
     await descriptionInput.sendKeys('Freela de website')
@@ -356,9 +350,17 @@ describe('dev.finance$ - Test Suite', () => {
 
     submitButton.click()
 
-    const incomeDisplay = await driver.findElement(By.id('incomeDisplay')).getText()
+    const incomeDisplay = await driver
+      .findElement(By.id('incomeDisplay'))
+      .getText()
 
     expect(incomeDisplay).toBe('R$ 1.000,00')
+
+    const incomeValue = await driver
+      .findElement(By.className('income'))
+      .getText()
+
+    expect(incomeValue).toBe('R$ 1.000,00')
   })
 
   test('CT16-02 - Sistema realiza a formatação brasileira dos valores das transações', async () => {
@@ -372,9 +374,17 @@ describe('dev.finance$ - Test Suite', () => {
 
     submitButton.click()
 
-    const expenseDisplay = await driver.findElement(By.id('expenseDisplay')).getText()
+    const expenseDisplay = await driver
+      .findElement(By.id('expenseDisplay'))
+      .getText()
 
     expect(expenseDisplay).toBe('-R$ 1.000,00')
+
+    const expenseValue = await driver
+      .findElement(By.className('expense'))
+      .getText()
+
+    expect(expenseValue).toBe('-R$ 1.000,00')
   })
 
   test('CT16-03 - Sistema realiza a formatação brasileira dos valores das transações', async () => {
@@ -388,12 +398,20 @@ describe('dev.finance$ - Test Suite', () => {
 
     submitButton.click()
 
-    const incomeDisplay = await driver.findElement(By.id('incomeDisplay')).getText()
+    const incomeDisplay = await driver
+      .findElement(By.id('incomeDisplay'))
+      .getText()
 
     expect(incomeDisplay).toBe('R$ 1.000.000,00')
+
+    const incomeValue = await driver
+      .findElement(By.className('income'))
+      .getText()
+
+    expect(incomeValue).toBe('R$ 1.000.000,00')
   })
 
-  test('CT17 - Usuário exclui uma transação', async () => {
+  test('CT17-01 - Usuário exclui uma transação', async () => {
     createTransactionButton.click()
 
     await descriptionInput.sendKeys('Conta de Luz')
@@ -406,8 +424,7 @@ describe('dev.finance$ - Test Suite', () => {
 
     let transaction = await driver.findElement(By.tagName('tbody')).getText()
 
-    expect(transaction).toBe("Conta de Luz -R$ 256,00 20/08/2001")
-
+    expect(transaction).toBe('Conta de Luz -R$ 256,00 20/08/2001')
 
     const deleteButton = await driver.findElement(By.className('button-remove'))
 
@@ -416,5 +433,53 @@ describe('dev.finance$ - Test Suite', () => {
     transaction = await driver.findElement(By.tagName('tbody')).getText()
 
     expect(transaction).toBe('')
+
+    const expenseDisplay = await driver
+      .findElement(By.id('expenseDisplay'))
+      .getText()
+
+    expect(expenseDisplay).toBe('R$ 0,00')
+
+    const totalDisplay = await driver
+      .findElement(By.id('totalDisplay'))
+      .getText()
+
+    expect(totalDisplay).toBe('R$ 0,00')
+  })
+
+  test('CT17-02 - Usuário exclui uma transação', async () => {
+    createTransactionButton.click()
+
+    await descriptionInput.sendKeys('Freela')
+
+    await amountInput.sendKeys('2000')
+
+    await dateInput.sendKeys('20/08/2001')
+
+    submitButton.click()
+
+    let transaction = await driver.findElement(By.tagName('tbody')).getText()
+
+    expect(transaction).toBe('Freela R$ 2.000,00 20/08/2001')
+
+    const deleteButton = await driver.findElement(By.className('button-remove'))
+
+    await driver.executeScript('arguments[0].click()', deleteButton)
+
+    transaction = await driver.findElement(By.tagName('tbody')).getText()
+
+    expect(transaction).toBe('')
+
+    const incomeDisplay = await driver
+      .findElement(By.id('incomeDisplay'))
+      .getText()
+
+    expect(incomeDisplay).toBe('R$ 0,00')
+
+    const totalDisplay = await driver
+      .findElement(By.id('totalDisplay'))
+      .getText()
+
+    expect(totalDisplay).toBe('R$ 0,00')
   })
 })
